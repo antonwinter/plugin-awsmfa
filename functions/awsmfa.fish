@@ -1,8 +1,8 @@
 function __awsmfa_test_expiry
     if test $AWS_SESSION_EXPIRY
 
-        set now (ruby -e "require 'time'; puts Time.now.to_i")
-        set expiry (ruby -e "require 'time'; puts Time.iso8601('$AWS_SESSION_EXPIRY').to_i")
+        set now (date +'%s')
+        set expiry (date -j -f "%FT%TZ" "$AWS_SESSION_EXPIRY" +%s)
 
         if [ $now -lt $expiry ]
             echo "AWS_SESSION_TOKEN is still valid but will expire at $AWS_SESSION_EXPIRY"
@@ -16,11 +16,11 @@ function __awsmfa_test_expiry
 end
 
 function __awsmfa_clear_variables
-    set -gu AWS_SESSION_EXPIRY;    set -Uu AWS_SESSION_EXPIRY
-    set -gu AWS_ACCESS_KEY_ID;     set -Uu AWS_ACCESS_KEY_ID
-    set -gu AWS_SECRET_ACCESS_KEY; set -Uu AWS_SECRET_ACCESS_KEY
-    set -gu AWS_SESSION_TOKEN;     set -Uu AWS_SESSION_TOKEN
-    set -gu AWS_SECURITY_TOKEN;    set -Uu AWS_SECURITY_TOKEN
+    set -gu AWS_SESSION_EXPIRY    || set -Uu AWS_SESSION_EXPIRY
+    set -gu AWS_ACCESS_KEY_ID     || set -Uu AWS_ACCESS_KEY_ID
+    set -gu AWS_SECRET_ACCESS_KEY || set -Uu AWS_SECRET_ACCESS_KEY
+    set -gu AWS_SESSION_TOKEN     || set -Uu AWS_SESSION_TOKEN
+    set -gu AWS_SECURITY_TOKEN    || set -Uu AWS_SECURITY_TOKEN
 end
 
 function awsmfa

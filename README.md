@@ -15,11 +15,11 @@ Gets and sets temporary credentials for an AWS account or IAM user when using an
 ## Install
 
 ```fish
-$ omf install https://github.com/davewongillies/plugin-awsmfa
+$ omf install https://github.com/antonwinter/plugin-awsmfa
 ```
 
 ## Configuration
-In `~/.aws/credentials`, add `username` and `account_id` settings to each profile that you want to use `awsmfa` with.
+In `~/.aws/config`, ensure you have the `mfa_serial` in each profile that you want to use `awsmfa` with as per the [AWS CLI Using Multi-Factor Authentication Docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-mfa).
 
 ## Usage
 

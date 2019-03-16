@@ -43,7 +43,7 @@ function awsmfa
         if __awsmfa_test_expiry
             __awsmfa_clear_variables
 
-            set mfarn (awk "/\[profile $profile\]/,/^\$/ { if (/mfa_serial/) { print \$5 }}" ~/.aws/config)
+            set mfarn (awk "/\[profile $profile\]/,/^\$/ { if (/mfa_serial/) { print \$3 }}" ~/.aws/config)
             set account (echo $mfarn | awk -F[:/] "{ print \$5}")
             set username (echo $mfarn | awk -F[:/] "{ print \$7}")
 

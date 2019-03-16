@@ -15,7 +15,7 @@ Gets and sets temporary credentials for an AWS account or IAM user when using an
 ## Install
 
 ```fish
-$ omf install https://github.com/antonwinter/plugin-awsmfa
+$ omf install https://github.com/davidwongillies/plugin-awsmfa
 ```
 
 ## Configuration

@@ -1,8 +1,8 @@
 function __awsmfa_test_expiry
     if test $AWS_SESSION_EXPIRY
 
-        set now (date +'%s')
-        set expiry (date -j -f "%FT%TZ" "$AWS_SESSION_EXPIRY" +%s)
+        set now (env ruby -e "require 'time'; puts Time.now.to_i")
+        set expiry (env ruby -e "require 'time'; puts Time.iso8601('$AWS_SESSION_EXPIRY').to_i")
 
         if [ $now -lt $expiry ]
             echo "AWS_SESSION_TOKEN is still valid but will expire at $AWS_SESSION_EXPIRY"
@@ -16,11 +16,10 @@ function __awsmfa_test_expiry
 end
 
 function __awsmfa_clear_variables
-    set -gu AWS_SESSION_EXPIRY;    set -Uu AWS_SESSION_EXPIRY
-    set -gu AWS_ACCESS_KEY_ID;     set -Uu AWS_ACCESS_KEY_ID
-    set -gu AWS_SECRET_ACCESS_KEY; set -Uu AWS_SECRET_ACCESS_KEY
-    set -gu AWS_SESSION_TOKEN;     set -Uu AWS_SESSION_TOKEN
-    set -gu AWS_SECURITY_TOKEN;    set -Uu AWS_SECURITY_TOKEN
+    set -gu AWS_SESSION_EXPIRY 2>/dev/null;    set -Uu AWS_SESSION_EXPIRY 2>/dev/null
+    set -gu AWS_ACCESS_KEY_ID 2>/dev/null;     set -Uu AWS_ACCESS_KEY_ID 2>/dev/null
+    set -gu AWS_SECRET_ACCESS_KEY 2>/dev/null; set -Uu AWS_SECRET_ACCESS_KEY 2>/dev/null
+    set -gu AWS_SESSION_TOKEN 2>/dev/null;     set -Uu AWS_SESSION_TOKEN 2>/dev/null
 end
 
 function awsmfa
@@ -36,16 +35,16 @@ function awsmfa
         set profile $argv[1]
     end
 
-    if not fgrep -q "[profile $profile]" ~/.aws/config
+    if not fgrep -q "[$profile]" ~/.aws/credentials
         echo "Please specify a valid profile."
     else
 
         if __awsmfa_test_expiry
-            __awsmfa_clear_variables 2>/dev/null
+            __awsmfa_clear_variables
 
-            set mfarn (awk "/\[profile $profile\]/,/^\$/ { if (/mfa_serial/) { print \$3 }}" ~/.aws/config)
-            set account (echo $mfarn | awk -F[:/] "{ print \$5}")
-            set username (echo $mfarn | awk -F[:/] "{ print \$7}")
+            set account (awk "/\[$profile\]/,/^\$/ { if (\$1 == \"account_id\") { print \$3 }}" ~/.aws/credentials)
+            set username (awk "/\[$profile\]/,/^\$/ { if (\$1 == \"username\") { print \$3 }}" ~/.aws/credentials)
+            set mfarn "arn:aws:iam::$account:mfa/$username"
 
             echo "Please enter your AWS MFA token for $mfarn:"
             read -p "set_color yellow; echo -n token; set_color normal; echo '> '" -l mfa_token
@@ -56,7 +55,7 @@ function awsmfa
             --duration-seconds $duration \
             --output text \
             --query \
-'Credentials | join (`;`,values({ AccessKeyId: join(``, [`set -Ux AWS_ACCESS_KEY_ID `,AccessKeyId]), SecretAccessKey:join(``, [`set -Ux AWS_SECRET_ACCESS_KEY `,SecretAccessKey]), SessionToken:join(``, [`set -Ux AWS_SESSION_TOKEN `,SessionToken]), SessionToken:join(``, [`set -Ux AWS_SECURITY_TOKEN `,SessionToken]), Expiration:join(``, [`set -Ux AWS_SESSION_EXPIRY `,Expiration]) }))' )
+'Credentials | join (`;`,values({ AccessKeyId: join(``, [`set -Ux AWS_ACCESS_KEY_ID `,AccessKeyId]), SecretAccessKey:join(``, [`set -Ux AWS_SECRET_ACCESS_KEY `,SecretAccessKey]), SessionToken:join(``, [`set -Ux AWS_SESSION_TOKEN `,SessionToken]), Expiration:join(``, [`set -Ux AWS_SESSION_EXPIRY `,Expiration]) }))' )
             test $status -eq 0; and fish -c $aws_cli
         end
     end
